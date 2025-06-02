@@ -1,41 +1,48 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DataTable from 'react-data-table-component';
-import { Button, Stack } from '@mui/material';
+import { Button, Stack, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
 import { useAuth } from '../providers/AuthProvider';
 import { getSalesReps, deleteSalesRep } from '../services/api';
 
 const SalesRepList = () => {
   const { token } = useAuth();
   const [salesReps, setSalesReps] = useState([]);
+  const [error, setError] = useState('');
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const navigate = useNavigate();
 
-  const loadSalesReps = async () => {
-    if (!token) return; // prevent load if no token
-    try {
-      const data = await getSalesReps(token);
-      setSalesReps(data);
-    } catch (error) {
-      console.error('Failed to load sales reps:', error);
-      setSalesReps([]);
-    }
-  };
+  useEffect(() => {
+    const fetchSalesReps = async () => {
+      if (!token) return;
+      try {
+        const data = await getSalesReps(token);
+        setSalesReps(data);
+      } catch {
+        setError('Failed to load sales reps.');
+        setErrorDialogOpen(true);
+        setSalesReps([]);
+      }
+    };
+
+    fetchSalesReps();
+  }, [token]);
 
   const handleDelete = async (id) => {
     if (!token) return;
     if (window.confirm('Are you sure you want to delete this sales rep?')) {
       try {
         await deleteSalesRep(id, token);
-        loadSalesReps();
-      } catch (error) {
-        console.error('Failed to delete sales rep:', error);
+        const updatedData = await getSalesReps(token);
+        setSalesReps(updatedData);
+      } catch {
+        setError('Failed to delete sales rep.');
+        setErrorDialogOpen(true);
       }
     }
   };
 
-  useEffect(() => {
-    loadSalesReps();
-  }, [token]);
+  const handleCloseErrorDialog = () => setErrorDialogOpen(false);
 
   const columns = [
     {
@@ -102,6 +109,18 @@ const SalesRepList = () => {
         responsive
         noDataComponent="No sales representatives found."
       />
+
+      <Dialog open={errorDialogOpen} onClose={handleCloseErrorDialog}>
+        <DialogTitle>Error</DialogTitle>
+        <DialogContent>
+          <Typography>{error}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseErrorDialog} color="primary" variant="contained">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

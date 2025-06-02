@@ -7,6 +7,6 @@ namespace SalesRep.Services
     {
         Task<bool> UserExists(string username);
         Task RegisterAsync(RegisterUserDto dto);
-        Task<bool> ValidateUserAsync(LoginUserDto dto);
+        Task<string?> ValidateUserAsync(LoginUserDto dto);
     }
 }

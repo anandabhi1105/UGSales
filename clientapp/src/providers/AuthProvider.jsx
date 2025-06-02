@@ -1,20 +1,22 @@
-import React, { createContext, useContext, useState } from "react";
-import { registerUser } from "../services/api";
+import React, { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token'));
 
-  const login = (token) => setToken(token);
-  const logout = () => setToken(null);
+  const login = (tokenValue) => {
+    localStorage.setItem('token', tokenValue);
+    setToken(tokenValue);
+  };
 
-  const signUp = async (username, email, password, phoneNo) => {
-    return await registerUser(username, email, password, "User", phoneNo);
+  const logout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
   };
 
   return (
-    <AuthContext.Provider value={{ token, login, logout, signUp }}>
+    <AuthContext.Provider value={{ token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

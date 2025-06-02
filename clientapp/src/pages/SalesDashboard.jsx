@@ -9,6 +9,11 @@ import {
   FormLabel,
   Grid,
   Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
@@ -21,25 +26,33 @@ const SalesDashboard = () => {
   const { token } = useAuth();
   const [filters, setFilters] = useState({ product: '', region: '', platform: '' });
   const [sales, setSales] = useState([]);
-
-  const loadSales = async () => {
-    if (!token) return;
-
-    try {
-      const data = await getSales(filters, token);
-      setSales(data);
-    } catch (error) {
-      console.error('Error loading sales:', error);
-      setSales([]);
-    }
-  };
+  const [error, setError] = useState('');
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
 
   useEffect(() => {
-    loadSales();
+    const fetchSales = async () => {
+      if (!token) return;
+
+      try {
+        const data = await getSales(filters, token);
+        setSales(data);
+      } catch (error) {
+        console.error('Error loading sales:', error);
+        setError('Failed to load sales data.');
+        setSales([]);
+        setErrorDialogOpen(true);
+      }
+    };
+
+    fetchSales();
   }, [filters, token]);
 
   const handleChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
+  };
+
+  const handleCloseErrorDialog = () => {
+    setErrorDialogOpen(false);
   };
 
   const columns = [
@@ -58,7 +71,6 @@ const SalesDashboard = () => {
           📊 UG Sales Dashboard
         </Typography>
 
-        {/* Filters */}
         <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
           <Grid container spacing={3}>
             <FormGrid item xs={12} md={4}>
@@ -99,7 +111,6 @@ const SalesDashboard = () => {
           </Grid>
         </Paper>
 
-        {/* Data Table */}
         <Paper elevation={2}>
           <DataTable
             columns={columns}
@@ -112,6 +123,18 @@ const SalesDashboard = () => {
           />
         </Paper>
       </Box>
+
+      <Dialog open={errorDialogOpen} onClose={handleCloseErrorDialog}>
+        <DialogTitle>Error</DialogTitle>
+        <DialogContent>
+          <Typography>{error}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseErrorDialog} color="primary" variant="contained">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

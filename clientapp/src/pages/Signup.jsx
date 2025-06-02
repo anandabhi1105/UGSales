@@ -13,6 +13,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
@@ -26,8 +28,8 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNo, setPhoneNo] = useState("");
-  const [error, setError] = useState("");
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [error, setError] = useState("");
 
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -45,6 +47,10 @@ const SignUp = () => {
   const handleDialogClose = () => {
     setSuccessDialogOpen(false);
     navigate("/login");
+  };
+
+  const handleCloseSnackbar = () => {
+    setError("");
   };
 
   return (
@@ -127,14 +133,6 @@ const SignUp = () => {
               />
             </FormGrid>
 
-            {error && (
-              <Grid item xs={12}>
-                <Typography color="error" variant="body2" align="center">
-                  {error}
-                </Typography>
-              </Grid>
-            )}
-
             <Grid item xs={12}>
               <Button
                 fullWidth
@@ -148,7 +146,7 @@ const SignUp = () => {
 
             <Grid item xs={12}>
               <Typography variant="body2" align="center" color="textSecondary">
-                Already have an account?
+                Already have an account?{" "}
                 <Link to="/login" style={{ color: "#1976d2" }}>
                   Login
                 </Link>
@@ -168,11 +166,12 @@ const SignUp = () => {
         </Typography>
       </Paper>
 
-      {/* Success Dialog */}
       <Dialog open={successDialogOpen} onClose={handleDialogClose}>
         <DialogTitle>Registration Successful</DialogTitle>
         <DialogContent>
-          <Typography>You have registered successfully. Please log in to continue.</Typography>
+          <Typography>
+            You have registered successfully. Please log in to continue.
+          </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDialogClose} variant="contained" color="primary">
@@ -180,6 +179,17 @@ const SignUp = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: "100%" }}>
+          {error}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

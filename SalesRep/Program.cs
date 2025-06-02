@@ -6,8 +6,14 @@ using AutoMapper;
 using FluentValidation.AspNetCore;
 using Serilog;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Security.Claims;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json").Build();
 
 // Logging
 builder.Host.UseSerilog((ctx, lc) => lc
@@ -26,6 +32,27 @@ builder.Services.AddControllers().AddFluentValidation(fv =>
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(option =>
+{
+    option.SaveToken = true;
+    option.TokenValidationParameters = new TokenValidationParameters
+    {
+        SaveSigninToken = true,
+        ValidateIssuer = true,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = config["Jwt:Issuer"],       
+        ValidAudience = config["Jwt:Issuer"],   
+        IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(config["Jwt:Key"])) // Jwt:Key - config value 
+    };
+});
+
+builder.Services.AddScoped<JwtService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactDev", policy =>
@@ -48,10 +75,10 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowReactDev");
 
 // app.UseHttpsRedirection();
+app.UseAuthentication(); 
 app.UseAuthorization();
 app.MapControllers();
 
-// Serve React static files
 var clientAppPath = Path.Combine(app.Environment.ContentRootPath, "ClientApp", "build");
 if (Directory.Exists(clientAppPath))
 {
@@ -67,7 +94,6 @@ if (Directory.Exists(clientAppPath))
     });
 }
 
-// Fallback route to serve index.html (for React Router SPA)
 app.MapFallback(async context =>
 {
     if (File.Exists(Path.Combine(clientAppPath, "index.html")))

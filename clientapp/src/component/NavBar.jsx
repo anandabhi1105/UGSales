@@ -8,11 +8,10 @@ const NavBar = () => {
   const navigate = useNavigate();
   const { token, logout } = useAuth();
 
-  // Navigation handlers (optional but keeping for clarity)
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
+  const handleLogout = async () => {
+  await logout();
+  navigate("/");
+};
 
   return (
     <nav className="nav-bar">

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../providers/AuthProvider";
+import { loginUser } from "../services/api";
 import {
   Paper,
   Typography,
@@ -9,6 +10,8 @@ import {
   Grid,
   Button,
   Box,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
@@ -20,15 +23,26 @@ const FormGrid = styled(Grid)(() => ({
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [alert, setAlert] = useState({ open: false, severity: "error", message: "" });
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  const handleCloseAlert = () => {
+    setAlert({ ...alert, open: false });
+  };
+
   const handleLogin = async () => {
     try {
-      await login(username, password);
-      navigate("/dashboard");
+      const data = await loginUser(username, password);
+
+      if (data?.token) {
+        login(data.token);
+        navigate("/dashboard");
+      } else {
+        setAlert({ open: true, severity: "error", message: "Login failed: Token not returned." });
+      }
     } catch (error) {
-      alert("Invalid credentials");
+      setAlert({ open: true, severity: "error", message: "Invalid credentials" });
     }
   };
 
@@ -78,12 +92,7 @@ const Login = () => {
           </FormGrid>
 
           <Grid item xs={12} sx={{ mt: 2 }}>
-            <Button
-              fullWidth
-              variant="contained"
-              color="primary"
-              onClick={handleLogin}
-            >
+            <Button fullWidth variant="contained" color="primary" onClick={handleLogin}>
               Login
             </Button>
           </Grid>
@@ -108,6 +117,16 @@ const Login = () => {
           &copy; {new Date().getFullYear()} JD Sales. All rights reserved.
         </Typography>
       </Paper>
+      <Snackbar
+        open={alert.open}
+        autoHideDuration={6000}
+        onClose={handleCloseAlert}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert onClose={handleCloseAlert} severity={alert.severity} sx={{ width: "100%" }}>
+          {alert.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
