@@ -25,7 +25,7 @@
 ## 📁 Project Structure
 ```
 UGSales/
-├── SalesRepApi/           # ASP.NET Core 6 Web API backend
+├── SalesRepApi/           # ASP.NET Core 8 Web API backend
 ├── client-app/            # React 18 frontend
 └── README.md
 ```
